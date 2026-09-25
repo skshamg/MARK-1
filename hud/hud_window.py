@@ -40,7 +40,7 @@ class ArcReactorWidget(QWidget):
 
         cx, cy = self.width() / 2, self.height() / 2
 
-        # 1. Outer Diffuse Energy Halo
+        # 1. Outer Diffuse Halo
         glow_intensity = int(140 + 70 * math.sin(self.pulse_phase))
         halo_color = QColor(self.core_color.red(), self.core_color.green(), self.core_color.blue(), int(glow_intensity * 0.25))
         painter.setBrush(QBrush(halo_color))
@@ -53,7 +53,7 @@ class ArcReactorWidget(QWidget):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawEllipse(int(cx - 44), int(cy - 44), 88, 88)
 
-        # 3. Rotating Induction Coils (8 segments)
+        # 3. Rotating Coils
         num_coils = 8
         coil_radius = 35
         painter.save()
@@ -74,7 +74,7 @@ class ArcReactorWidget(QWidget):
 
         painter.restore()
 
-        # 4. Secondary Counter-Rotating Segment Ring
+        # 4. Segmented Ring
         painter.save()
         painter.translate(cx, cy)
         painter.rotate(-self.rotation_angle * 1.5)
@@ -83,12 +83,12 @@ class ArcReactorWidget(QWidget):
         painter.drawEllipse(-26, -26, 52, 52)
         painter.restore()
 
-        # 5. Inner Core Ring
+        # 5. Inner Core
         core_pen = QPen(QColor(self.core_color.red(), self.core_color.green(), self.core_color.blue(), 240), 2)
         painter.setPen(core_pen)
         painter.drawEllipse(int(cx - 16), int(cy - 16), 32, 32)
 
-        # 6. Central High-Intensity Plasma Node
+        # 6. Central Node
         core_alpha = int(180 + 75 * math.sin(self.pulse_phase))
         core_glow = QColor(220, 245, 255, core_alpha)
         painter.setBrush(QBrush(core_glow))
@@ -108,7 +108,7 @@ class JarvisHUD(QWidget):
             Qt.WindowType.SubWindow
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.resize(440, 210)
+        self.resize(480, 250)
         self.old_pos = QPoint()
 
         self._build_ui()
@@ -121,9 +121,11 @@ class JarvisHUD(QWidget):
 
         self.frame = QFrame()
         self.frame.setObjectName("MainFrame")
-        frame_layout = QHBoxLayout(self.frame)
-        frame_layout.setContentsMargins(20, 16, 20, 16)
+        frame_layout = QVBoxLayout(self.frame)
+        frame_layout.setContentsMargins(18, 14, 18, 14)
 
+        # Top row: Brand + Telemetry + Reactor
+        top_row = QHBoxLayout()
         info_layout = QVBoxLayout()
 
         header_layout = QHBoxLayout()
@@ -144,23 +146,26 @@ class JarvisHUD(QWidget):
         header_layout.addWidget(self.state_badge)
 
         info_layout.addLayout(header_layout)
-        info_layout.addSpacing(10)
-
-        self.audio_lbl = QLabel('"Press Alt+Space to talk, Alt+V for vision"')
-        self.audio_lbl.setObjectName("AudioPrompt")
-        info_layout.addWidget(self.audio_lbl)
-
-        info_layout.addSpacing(10)
+        info_layout.addSpacing(6)
 
         self.telemetry_lbl = QLabel("CPU: --%   RAM: --%   BAT: --%")
         self.telemetry_lbl.setObjectName("TelemetryLabel")
         info_layout.addWidget(self.telemetry_lbl)
 
-        frame_layout.addLayout(info_layout, stretch=3)
+        top_row.addLayout(info_layout, stretch=3)
 
         self.reactor = ArcReactorWidget()
         self.reactor.clicked.connect(self.reactor_triggered.emit)
-        frame_layout.addWidget(self.reactor, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
+        top_row.addWidget(self.reactor, stretch=1, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        frame_layout.addLayout(top_row)
+        frame_layout.addSpacing(8)
+
+        # Bottom row: Live Sci-Fi Subtitles Box
+        self.subtitle_box = QLabel("Jarvis: Awaiting wake word or shortcut...")
+        self.subtitle_box.setObjectName("SubtitleBox")
+        self.subtitle_box.setWordWrap(True)
+        frame_layout.addWidget(self.subtitle_box)
 
         main_layout.addWidget(self.frame)
 
@@ -212,7 +217,13 @@ class JarvisHUD(QWidget):
             )
 
         if prompt_text:
-            self.audio_lbl.setText(f'"{prompt_text}"')
+            self.set_subtitles("SYSTEM", prompt_text)
+
+    def set_subtitles(self, speaker: str, text: str):
+        """Updates the HUD subtitle stream."""
+        tag_color = "#00e5ff" if speaker == "MARK-II" else ("#00ff88" if speaker == "YOU" else "#ffaa00")
+        formatted = f'<span style="color: {tag_color}; font-weight: bold;">[{speaker}]</span> {text}'
+        self.subtitle_box.setText(formatted)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
