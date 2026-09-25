@@ -5,10 +5,10 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-# Add root folder to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from tools.sys_tools import get_system_telemetry, launch_application, list_files_in_directory
 from tools.file_tools import write_file, read_file, append_to_file, search_files
+from tools.vision_tools import capture_screen_part
 from core.memory import remember, recall, get_all_memories
 
 load_dotenv()
@@ -21,16 +21,18 @@ if not api_key:
 def build_system_prompt() -> str:
     known_memories = get_all_memories()
     return f"""
-You are MARK-1 (J.A.R.V.I.S.), an intelligent, sharp, and highly capable desktop system assistant.
-- You have direct access to your local system toolkits:
-  * Telemetry & Apps: get_system_telemetry, launch_application, list_files_in_directory
-  * File System: write_file, read_file, append_to_file, search_files
-  * Memory Engine: remember (store key/value), recall (retrieve memories)
-- When the user tells you to remember something, or asks what you remember about them or a project, call the memory tools autonomously.
-- Be concise, direct, professional, and slightly witty.
-- Never output raw JSON. Address the user with calm confidence.
+You are MARK-II (J.A.R.V.I.S.), an intelligent, sharp, and highly capable desktop system assistant.
+- You have direct access to system toolkits (telemetry, applications, files, memory).
+- SPATIAL VISION: You can see the user's active monitor when triggered. Analyze layouts, diagrams, and find bugs.
 
-KNOWN LONG-TERM MEMORIES:
+CRITICAL VOICE & CONVERSATIONAL RULES:
+- Your response is spoken aloud via Text-to-Speech.
+- NEVER read raw code blocks, long code lines, or symbols verbatim.
+- Summarize errors and fixes naturally in plain English (e.g., say "You have a missing closing parenthesis on line 14" instead of reading the line).
+- Keep verbal responses concise (1 to 3 crisp sentences).
+- If the user explicitly asks you to write code to a file, use the write_file tool quietly rather than dumping raw code in speech.
+
+KNOWN MEMORIES:
 {known_memories}
 """
 
@@ -38,7 +40,6 @@ KNOWN LONG-TERM MEMORIES:
 class Mark1Brain:
     def __init__(self):
         self.client = genai.Client(api_key=api_key)
-        # 3.5 Flash-Lite provides sub-second responses without server bottlenecks
         self.model_pool = ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.5-flash"]
         self.current_model_idx = 0
         self.active_model = self.model_pool[self.current_model_idx]
@@ -58,7 +59,7 @@ class Mark1Brain:
                 remember,
                 recall,
             ],
-            temperature=0.6,
+            temperature=0.3,
         )
 
     def _setup_chat(self):
@@ -67,11 +68,22 @@ class Mark1Brain:
             config=self._get_config()
         )
 
-    def talk(self, user_input: str) -> str:
+    def talk(self, user_input: str, force_vision: bool = False) -> str:
+        vision_triggers = ["screen", "look", "see", "code", "window", "display", "diagram", "read this", "error"]
+        needs_vision = force_vision or any(trigger in user_input.lower() for trigger in vision_triggers)
+
+        contents = [user_input]
+        if needs_vision:
+            try:
+                screen_part = capture_screen_part()
+                contents.append(screen_part)
+            except Exception as e:
+                print(f"[VISION WARNING] Screen capture bypassed: {e}")
+
         attempts = 0
         while attempts < len(self.model_pool):
             try:
-                response = self.chat.send_message(user_input)
+                response = self.chat.send_message(contents)
                 return response.text.strip()
             except Exception as e:
                 err_str = str(e)
@@ -85,4 +97,4 @@ class Mark1Brain:
                 else:
                     return f"System alert: Communication pipeline encountered an error: {e}"
 
-        return "System alert: All Gemini neural endpoints are experiencing high demand."
+        return "System alert: Endpoints busy. Standing by."

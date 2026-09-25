@@ -1,0 +1,54 @@
+/* MARK-II Sci-Fi Glassmorphism Container */
+QWidget#MainFrame {
+    background-color: rgba(8, 14, 26, 0.88);
+    border: 1px solid rgba(0, 240, 255, 0.35);
+    border-top: 2px solid #00f0ff;
+    border-radius: 14px;
+}
+
+/* Header & Typography */
+QLabel#TitleLabel {
+    color: #00f0ff;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+QLabel#SubtitleLabel {
+    color: rgba(0, 240, 255, 0.5);
+    font-family: "Consolas", monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+}
+
+/* Dynamic State Pill */
+QLabel#StateBadge {
+    font-family: "Consolas", monospace;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background-color: rgba(0, 240, 255, 0.1);
+    border: 1px solid rgba(0, 240, 255, 0.4);
+    color: #00f0ff;
+}
+
+/* Telemetry Readout Grid */
+QLabel#TelemetryLabel {
+    color: #90a4ae;
+    font-family: "Consolas", monospace;
+    font-size: 10px;
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 6px 10px;
+    border-radius: 6px;
+    border-left: 2px solid #00e5ff;
+}
+
+/* Audio Status Readout */
+QLabel#AudioPrompt {
+    color: #eceff1;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 11px;
+    font-style: italic;
+}
