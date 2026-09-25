@@ -1,0 +1,10 @@
+# Secrets
+.env
+
+# Local database & audio buffers
+*.db
+*.mp3
+
+# Python cache
+__pycache__/
+*.pyc
