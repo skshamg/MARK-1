@@ -59,3 +59,19 @@ MARK-1/
 ├── mark2_app.py         # Mark-2 master GUI entry point
 ├── requirements.txt     # Python environment dependencies
 └── .gitignore           # Ignores .env and SQLite binaries
+
+
+Install dependencies:
+pip install -r requirements.txt
+
+Configure API Key:
+Create a .env file in the root directory:
+Code snippet
+GEMINI_API_KEY=your_gemini_api_key_here
+
+Launch:
+For Mark-2 (Full HUD Experience):
+python mark2_app.py
+
+For Mark-1 (Lightweight Terminal Mode):
+python main.py
